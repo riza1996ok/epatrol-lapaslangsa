@@ -1,0 +1,141 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>E-Patrol Lapas Kelas IIB Langsa</title>
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #0a0f4a, #1b1c3a);
+      color: #fff;
+      margin: 0;
+      padding: 2rem;
+    }
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background: linear-gradient(145deg, #f5f5f5, #e0e0e0);
+      color: #111;
+      padding: 2rem;
+      border-radius: 16px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+    }
+    h2 {
+      text-align: center;
+      color: #0a0f4a;
+      margin-bottom: 1.5rem;
+    }
+    label {
+      display: block;
+      margin-top: 1rem;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+    }
+    input, button {
+      width: 100%;
+      padding: 0.75rem;
+      margin-bottom: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 1rem;
+    }
+    button {
+      background-color: #c9b037; /* gold */
+      color: #0a0f4a;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background-color 0.3s;
+    }
+    button:hover {
+      background-color: #b89e2d;
+    }
+    #status {
+      text-align: center;
+      font-weight: bold;
+      margin-top: 1rem;
+    }
+    .logo {
+      display: block;
+      margin: 0 auto 1rem;
+      width: 90px;
+    }
+    #reader {
+      width: 100%;
+      margin: 1rem 0;
+      border: 2px dashed silver;
+      border-radius: 8px;
+      padding: 1rem;
+      background-color: #f4f4f4;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/fd/Logo_Kementerian_Hukum_dan_HAM_Republik_Indonesia.svg/1024px-Logo_Kementerian_Hukum_dan_HAM_Republik_Indonesia.svg.png" alt="Logo Kemenkumham" class="logo">
+    <h2>E-Patrol<br>Lapas Kelas IIB Langsa</h2>
+    <form id="patrolForm">
+      <label for="nama">Nama Petugas:</label>
+      <input type="text" id="nama" name="nama" required>
+
+      <label for="pos">Scan Barcode Pos:</label>
+      <div id="reader"></div>
+      <input type="text" id="pos" name="pos" readonly required>
+
+      <label for="foto">Upload Foto:</label>
+      <input type="file" id="foto" name="foto" accept="image/*" required>
+
+      <button type="submit">Kirim Patroli</button>
+    </form>
+    <div id="status"></div>
+  </div>
+
+  <script>
+    const scriptURL = "MASUKKAN_URL_WEB_APP_DISINI";
+
+    function onScanSuccess(decodedText, decodedResult) {
+      document.getElementById("pos").value = decodedText;
+    }
+
+    let html5QrcodeScanner = new Html5QrcodeScanner(
+      "reader", { fps: 10, qrbox: 250 }, false);
+    html5QrcodeScanner.render(onScanSuccess);
+
+    document.getElementById("patrolForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+
+      const nama = document.getElementById("nama").value;
+      const pos = document.getElementById("pos").value;
+      const foto = document.getElementById("foto").files[0];
+      const reader = new FileReader();
+
+      reader.onloadend = function () {
+        const fotoData = reader.result;
+
+        fetch(scriptURL, {
+          method: 'POST',
+          body: JSON.stringify({
+            nama_petugas: nama,
+            pos: pos,
+            foto_url: fotoData
+          }),
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })
+        .then(response => {
+          document.getElementById("status").innerText = "✅ Patroli berhasil dikirim!";
+        })
+        .catch(error => {
+          console.error('Error!', error.message);
+          document.getElementById("status").innerText = "❌ Gagal mengirim data.";
+        });
+      };
+
+      reader.readAsDataURL(foto);
+    });
+  </script>
+</body>
+</html>
